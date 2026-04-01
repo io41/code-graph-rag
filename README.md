@@ -131,26 +131,27 @@ git clone https://github.com/vitali87/code-graph-rag.git
 cd code-graph-rag
 ```
 
-2. **Install dependencies**:
+2. **Install the `cgr` command**:
 
 For basic Python support:
 ```bash
-uv sync
+uv tool install --editable .
 ```
 
 For full multi-language support:
 ```bash
-uv sync --extra treesitter-full
+uv tool install --editable '.[treesitter-full]'
 ```
+
+This installs Tree-sitter grammars for all supported languages (see Multi-Language Support section).
+
+> **Tip**: If `~/.local/bin` is not on your PATH, run `uv tool update-shell` and restart your shell.
 
 For development (including tests and pre-commit hooks):
 ```bash
-make dev
+uv sync --extra treesitter-full  # project venv for tests/linting
+make dev                          # pre-commit hooks
 ```
-
-This installs all dependencies and sets up pre-commit hooks automatically.
-
-This installs Tree-sitter grammars for all supported languages (see Multi-Language Support section).
 
 3. **Set up environment variables**:
 ```bash
@@ -179,11 +180,11 @@ CYPHER_ENDPOINT=http://localhost:11434/v1
 ```bash
 # .env file
 ORCHESTRATOR_PROVIDER=openai
-ORCHESTRATOR_MODEL=gpt-4o
+ORCHESTRATOR_MODEL=gpt-5.4
 ORCHESTRATOR_API_KEY=sk-your-openai-key
 
 CYPHER_PROVIDER=openai
-CYPHER_MODEL=gpt-4o-mini
+CYPHER_MODEL=gpt-5.4-mini
 CYPHER_API_KEY=sk-your-openai-key
 ```
 
@@ -237,14 +238,8 @@ docker compose up -d
 
 5. **Verify installation**:
 ```bash
-# If installed from PyPI:
 cgr --help
-
-# If running from source:
-uv run cgr --help
 ```
-
-> **Note**: When running from source (cloned repo), prefix all `cgr` commands below with `uv run`, e.g., `uv run cgr start ...`
 
 ## 🛠️ Makefile Commands
 
@@ -676,7 +671,7 @@ Configuration is managed through environment variables in `.env` file:
 
 #### Orchestrator Model Configuration
 - `ORCHESTRATOR_PROVIDER`: Provider name (`google`, `openai`, `ollama`)
-- `ORCHESTRATOR_MODEL`: Model ID (e.g., `gemini-2.5-pro`, `gpt-4o`, `llama3.2`)
+- `ORCHESTRATOR_MODEL`: Model ID (e.g., `gemini-2.5-pro`, `gpt-5.4`, `llama3.2`)
 - `ORCHESTRATOR_API_KEY`: API key for the provider (if required)
 - `ORCHESTRATOR_ENDPOINT`: Custom endpoint URL (if required)
 - `ORCHESTRATOR_PROJECT_ID`: Google Cloud project ID (for Vertex AI)
@@ -687,7 +682,7 @@ Configuration is managed through environment variables in `.env` file:
 
 #### Cypher Model Configuration
 - `CYPHER_PROVIDER`: Provider name (`google`, `openai`, `ollama`)
-- `CYPHER_MODEL`: Model ID (e.g., `gemini-2.5-flash`, `gpt-4o-mini`, `codellama`)
+- `CYPHER_MODEL`: Model ID (e.g., `gemini-2.5-flash`, `gpt-5.4-mini`, `codellama`)
 - `CYPHER_API_KEY`: API key for the provider (if required)
 - `CYPHER_ENDPOINT`: Custom endpoint URL (if required)
 - `CYPHER_PROJECT_ID`: Google Cloud project ID (for Vertex AI)

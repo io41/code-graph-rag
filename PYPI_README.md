@@ -128,7 +128,7 @@ print(f"Embedding dimension: {len(embedding)}")
 ```python
 from cgr import settings
 
-settings.set_orchestrator("openai", "gpt-4o", api_key="sk-...")
+settings.set_orchestrator("openai", "gpt-5.4", api_key="sk-...")
 settings.set_cypher("google", "gemini-2.5-flash", api_key="your-key")
 ```
 
@@ -141,10 +141,10 @@ Configure via `.env` or environment variables:
 | `MEMGRAPH_HOST` | `localhost` | Memgraph hostname |
 | `MEMGRAPH_PORT` | `7687` | Memgraph port |
 | `ORCHESTRATOR_PROVIDER` | | Provider: `google`, `openai`, `ollama` |
-| `ORCHESTRATOR_MODEL` | | Model ID (e.g. `gpt-4o`, `gemini-2.5-pro`) |
+| `ORCHESTRATOR_MODEL` | | Model ID (e.g. `gpt-5.4`, `gemini-2.5-pro`) |
 | `ORCHESTRATOR_API_KEY` | | API key for the provider (not needed for `ollama`) |
 | `CYPHER_PROVIDER` | | Provider for Cypher generation |
-| `CYPHER_MODEL` | | Model ID for Cypher generation (e.g. `codellama`, `gpt-4o-mini`) |
+| `CYPHER_MODEL` | | Model ID for Cypher generation (e.g. `codellama`, `gpt-5.4-mini`) |
 | `CYPHER_API_KEY` | | API key for Cypher provider (not needed for `ollama`) |
 | `TARGET_REPO_PATH` | `.` | Default repository path |
 

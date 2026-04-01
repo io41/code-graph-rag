@@ -47,7 +47,7 @@ for fn in functions[:5]:
 ```python
 from cgr import settings
 
-settings.set_orchestrator("openai", "gpt-4o", api_key="sk-...")
+settings.set_orchestrator("openai", "gpt-5.4", api_key="sk-...")
 settings.set_cypher("google", "gemini-2.5-flash", api_key="your-key")
 ```
 

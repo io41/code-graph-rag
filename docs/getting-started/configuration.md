@@ -24,11 +24,11 @@ CYPHER_ENDPOINT=http://localhost:11434/v1
 
 ```bash
 ORCHESTRATOR_PROVIDER=openai
-ORCHESTRATOR_MODEL=gpt-4o
+ORCHESTRATOR_MODEL=gpt-5.4
 ORCHESTRATOR_API_KEY=sk-your-openai-key
 
 CYPHER_PROVIDER=openai
-CYPHER_MODEL=gpt-4o-mini
+CYPHER_MODEL=gpt-5.4-mini
 CYPHER_API_KEY=sk-your-openai-key
 ```
 
@@ -63,7 +63,7 @@ CYPHER_ENDPOINT=http://localhost:11434/v1
 | Variable | Description |
 |----------|-------------|
 | `ORCHESTRATOR_PROVIDER` | Provider name (`google`, `openai`, `ollama`) |
-| `ORCHESTRATOR_MODEL` | Model ID (e.g., `gemini-2.5-pro`, `gpt-4o`, `llama3.2`) |
+| `ORCHESTRATOR_MODEL` | Model ID (e.g., `gemini-2.5-pro`, `gpt-5.4`, `llama3.2`) |
 | `ORCHESTRATOR_API_KEY` | API key for the provider (if required) |
 | `ORCHESTRATOR_ENDPOINT` | Custom endpoint URL (if required) |
 | `ORCHESTRATOR_PROJECT_ID` | Google Cloud project ID (for Vertex AI) |
@@ -77,7 +77,7 @@ CYPHER_ENDPOINT=http://localhost:11434/v1
 | Variable | Description |
 |----------|-------------|
 | `CYPHER_PROVIDER` | Provider name (`google`, `openai`, `ollama`) |
-| `CYPHER_MODEL` | Model ID (e.g., `gemini-2.5-flash`, `gpt-4o-mini`, `codellama`) |
+| `CYPHER_MODEL` | Model ID (e.g., `gemini-2.5-flash`, `gpt-5.4-mini`, `codellama`) |
 | `CYPHER_API_KEY` | API key for the provider (if required) |
 | `CYPHER_ENDPOINT` | Custom endpoint URL (if required) |
 | `CYPHER_PROJECT_ID` | Google Cloud project ID (for Vertex AI) |
@@ -113,7 +113,7 @@ ollama pull llama3.2
 Ollama automatically starts serving on `localhost:11434`.
 
 !!! note
-    Local models provide privacy and no API costs, but may have lower accuracy compared to cloud models like Gemini or GPT-4o.
+    Local models provide privacy and no API costs, but may have lower accuracy compared to cloud models like Gemini or GPT-5.4.
 
 ## Programmatic Configuration
 
@@ -122,6 +122,6 @@ You can also configure providers programmatically via the Python SDK:
 ```python
 from cgr import settings
 
-settings.set_orchestrator("openai", "gpt-4o", api_key="sk-...")
+settings.set_orchestrator("openai", "gpt-5.4", api_key="sk-...")
 settings.set_cypher("google", "gemini-2.5-flash", api_key="your-key")
 ```
