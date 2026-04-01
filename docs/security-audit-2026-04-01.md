@@ -64,7 +64,6 @@ However, the repository originally had several genuine security weaknesses. The 
 6. **Third-party GitHub Actions / external review services**
    - Examples:
      - `anthropics/claude-code-action`
-     - `vitali87/pr-split`
      - several third-party marketplace actions
    - Most actions are pinned, which is good, but they remain supply-chain trust points.
 
@@ -74,8 +73,6 @@ However, the repository originally had several genuine security weaknesses. The 
 
 8. **Workflow hardening improvements applied**
    - `build-binaries.yml` no longer mutates dependencies at runtime with `uv add`; it now uses a frozen sync from lockfile.
-   - `split-score.yml` no longer uses an unpinned `actions/checkout` tag.
-
 ### Low / Expected Findings
 
 9. **Subprocess usage in grammar tooling**
