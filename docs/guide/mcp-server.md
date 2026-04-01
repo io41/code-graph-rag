@@ -60,7 +60,7 @@ claude mcp add --transport stdio code-graph-rag \
 ```bash
 git clone https://github.com/vitali87/code-graph-rag.git
 cd code-graph-rag
-uv sync
+uv tool install --editable '.[treesitter-full]'
 
 docker run -p 7687:7687 -p 7444:7444 memgraph/memgraph-platform
 ```

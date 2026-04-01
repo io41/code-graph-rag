@@ -72,22 +72,25 @@ cd code-graph-rag
 For basic Python support:
 
 ```bash
-uv sync
+uv tool install --editable .
 ```
 
 For full multi-language support:
 
 ```bash
-uv sync --extra treesitter-full
+uv tool install --editable '.[treesitter-full]'
 ```
+
+This installs Tree-sitter grammars for all supported languages and puts `cgr` directly on your PATH.
+
+> **Tip**: If `~/.local/bin` is not on your PATH, run `uv tool update-shell` and restart your shell.
 
 For development (including tests and pre-commit hooks):
 
 ```bash
-make dev
+uv sync --extra treesitter-full  # project venv for tests/linting
+make dev                          # pre-commit hooks
 ```
-
-This installs all dependencies and sets up pre-commit hooks automatically.
 
 ## Start Memgraph
 
