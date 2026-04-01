@@ -31,8 +31,13 @@ cgr language add-grammar kotlin
 For languages hosted outside the standard tree-sitter organization:
 
 ```bash
-cgr language add-grammar --grammar-url https://github.com/custom/tree-sitter-mylang
+cgr language add-grammar \
+  --grammar-url https://github.com/custom/tree-sitter-mylang \
+  --trust-custom-grammar-url
 ```
+
+You can also allowlist trusted custom grammar repositories with exact
+`owner/repo` values via `TRUSTED_GRAMMAR_REPOS`.
 
 ## What Happens Automatically
 

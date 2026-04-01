@@ -430,6 +430,11 @@ def mcp_server(
     ),
     host: str = typer.Option(None, help=ch.HELP_MCP_HTTP_HOST),
     port: int = typer.Option(None, help=ch.HELP_MCP_HTTP_PORT),
+    allow_remote_http: bool = typer.Option(
+        False,
+        "--allow-remote-http",
+        help=ch.HELP_MCP_ALLOW_REMOTE_HTTP,
+    ),
 ) -> None:
     try:
         if transport == cs.MCPTransport.HTTP:
@@ -437,7 +442,13 @@ def mcp_server(
 
             resolved_host = host or settings.MCP_HTTP_HOST
             resolved_port = port or settings.MCP_HTTP_PORT
-            asyncio.run(serve_http(host=resolved_host, port=resolved_port))
+            asyncio.run(
+                serve_http(
+                    host=resolved_host,
+                    port=resolved_port,
+                    allow_remote=allow_remote_http or settings.MCP_ALLOW_REMOTE_HTTP,
+                )
+            )
         else:
             from codebase_rag.mcp import serve_stdio
 

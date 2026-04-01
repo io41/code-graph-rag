@@ -560,6 +560,18 @@ claude mcp add --transport stdio code-graph-rag \
   -- uv run --directory /path/to/code-graph-rag code-graph-rag mcp-server
 ```
 
+### HTTP Transport Security
+
+- HTTP transport defaults to `127.0.0.1:8080`.
+- Binding to a non-loopback interface requires both:
+  - `--allow-remote-http` or `MCP_ALLOW_REMOTE_HTTP=true`
+  - `MCP_HTTP_AUTH_TOKEN` set to a bearer token
+- When `MCP_HTTP_AUTH_TOKEN` is set, HTTP requests must include:
+
+```text
+Authorization: Bearer <your-token>
+```
+
 ### Available Tools
 
 <!-- SECTION:mcp_tools -->
@@ -799,7 +811,16 @@ For languages hosted outside the standard tree-sitter organization:
 
 ```bash
 # Add a language from a custom repository
-cgr language add-grammar --grammar-url https://github.com/custom/tree-sitter-mylang
+cgr language add-grammar \
+  --grammar-url https://github.com/custom/tree-sitter-mylang \
+  --trust-custom-grammar-url
+```
+
+You can also allowlist specific custom repositories with `TRUSTED_GRAMMAR_REPOS`
+using exact `owner/repo` values, for example:
+
+```bash
+export TRUSTED_GRAMMAR_REPOS=custom/tree-sitter-mylang,acme/tree-sitter-foo
 ```
 
 #### What Happens Automatically

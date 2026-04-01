@@ -156,6 +156,33 @@ class TestProviderConfiguration:
         assert provider == "ollama"
         assert model == "mistral-7b"
 
+    def test_mcp_http_defaults_to_loopback(self) -> None:
+        """Test that the HTTP MCP server binds to loopback by default."""
+        with patch.dict(os.environ, {}, clear=True):
+            config = AppConfig(_env_file=None)  # ty: ignore[unknown-argument]
+
+        assert config.MCP_HTTP_HOST == "127.0.0.1"
+        assert config.MCP_HTTP_PORT == 8080
+        assert config.MCP_ALLOW_REMOTE_HTTP is False
+        assert config.MCP_HTTP_AUTH_TOKEN is None
+        assert config.trusted_grammar_repo_allowlist == frozenset()
+
+    def test_trusted_grammar_repo_allowlist_parsing(self) -> None:
+        with patch.dict(
+            os.environ,
+            {
+                "TRUSTED_GRAMMAR_REPOS": (
+                    "custom/tree-sitter-mylang, acme/tree-sitter-foo "
+                )
+            },
+            clear=True,
+        ):
+            config = AppConfig(_env_file=None)  # ty: ignore[unknown-argument]
+
+        assert config.trusted_grammar_repo_allowlist == frozenset(
+            {"custom/tree-sitter-mylang", "acme/tree-sitter-foo"}
+        )
+
     def test_batch_size_validation(self) -> None:
         """Test batch size validation and resolution."""
         config = AppConfig()

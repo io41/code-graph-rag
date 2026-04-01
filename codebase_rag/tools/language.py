@@ -6,6 +6,7 @@ import pathlib
 import re
 import shutil
 import subprocess
+from urllib.parse import urlparse
 from dataclasses import dataclass
 from typing import NamedTuple
 
@@ -17,6 +18,7 @@ from rich.table import Table
 
 from .. import cli_help as ch
 from .. import constants as cs
+from ..config import settings
 from ..language_spec import LANGUAGE_SPECS, LanguageSpec
 
 
@@ -51,6 +53,42 @@ def _add_git_submodule(grammar_url: str, grammar_path: str) -> SubmoduleResult |
         return SubmoduleResult(success=True, grammar_path=grammar_path)
     except subprocess.CalledProcessError as e:
         return _handle_submodule_error(e, grammar_url, grammar_path)
+
+
+def _validate_grammar_source(
+    grammar_url: str,
+    trust_custom_grammar_url: bool,
+    trusted_repos: frozenset[str] | None = None,
+) -> None:
+    parsed_url = urlparse(grammar_url)
+    if parsed_url.scheme != "https" or parsed_url.netloc != "github.com":
+        raise click.ClickException(
+            "Only https://github.com/ grammar URLs are supported."
+        )
+
+    if parsed_url.params or parsed_url.query or parsed_url.fragment:
+        raise click.ClickException(
+            "Grammar URL must point to a GitHub repository root without query or fragment."
+        )
+
+    path_parts = [part for part in parsed_url.path.split("/") if part]
+    if len(path_parts) != 2:
+        raise click.ClickException(
+            "Grammar URL must point to a GitHub repository root."
+        )
+
+    repo_slug = "/".join(path_parts)
+    allowlist = trusted_repos or frozenset()
+    is_official_tree_sitter = cs.LANG_TREE_SITTER_URL_MARKER in grammar_url
+    is_allowlisted_custom_repo = repo_slug in allowlist
+    if (
+        not is_official_tree_sitter
+        and not is_allowlisted_custom_repo
+        and not trust_custom_grammar_url
+    ):
+        raise click.ClickException(
+            "Custom grammar URLs require --trust-custom-grammar-url."
+        )
 
 
 def _handle_submodule_error(
@@ -384,8 +422,15 @@ def cli() -> None:
     "--grammar-url",
     help=ch.HELP_GRAMMAR_URL,
 )
+@click.option(
+    "--trust-custom-grammar-url",
+    is_flag=True,
+    help=ch.HELP_TRUST_CUSTOM_GRAMMAR_URL,
+)
 def add_grammar(
-    language_name: str | None = None, grammar_url: str | None = None
+    language_name: str | None = None,
+    grammar_url: str | None = None,
+    trust_custom_grammar_url: bool = False,
 ) -> None:
     if not language_name and not grammar_url:
         language_name = click.prompt(cs.LANG_PROMPT_LANGUAGE_NAME)
@@ -397,14 +442,12 @@ def add_grammar(
         grammar_url = cs.LANG_DEFAULT_GRAMMAR_URL.format(name=language_name)
         click.echo(f"Search: {cs.LANG_MSG_USING_DEFAULT_URL.format(url=grammar_url)}")
 
-    if grammar_url and cs.LANG_TREE_SITTER_URL_MARKER not in grammar_url:
-        click.secho(
-            f"Warning: {cs.LANG_MSG_CUSTOM_URL_WARNING}",
-            fg=cs.Color.YELLOW,
-            bold=True,
+    if grammar_url:
+        _validate_grammar_source(
+            grammar_url,
+            trust_custom_grammar_url,
+            trusted_repos=settings.trusted_grammar_repo_allowlist,
         )
-        if not click.confirm(cs.LANG_PROMPT_CONTINUE):
-            return
 
     if not os.path.exists(cs.LANG_GRAMMARS_DIR):
         os.makedirs(cs.LANG_GRAMMARS_DIR)
@@ -429,7 +472,8 @@ def add_grammar(
         language_name = info.name
         file_extension = info.extensions
 
-    assert language_name is not None
+    if language_name is None:
+        raise click.ClickException("Language name could not be determined.")
 
     if node_types_path := _find_node_types_path(grammar_path, language_name):
         if categories := _parse_node_types_file(node_types_path):

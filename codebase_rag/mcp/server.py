@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+from ipaddress import ip_address
 from pathlib import Path
 
 from loguru import logger
@@ -137,6 +138,49 @@ def create_server() -> tuple[Server, MemgraphIngestor]:
     return server, ingestor
 
 
+def _is_loopback_host(host: str) -> bool:
+    normalized_host = host.strip()
+    if normalized_host in {"localhost", "127.0.0.1", "::1"}:
+        return True
+
+    try:
+        if ip_address(normalized_host).is_loopback:
+            return True
+    except ValueError:
+        return False
+
+    return False
+
+
+def _validate_http_host(
+    host: str, allow_remote: bool, auth_token: str | None = None
+) -> None:
+    if _is_loopback_host(host):
+        return
+
+    if not allow_remote:
+        raise ValueError(
+            "Remote HTTP MCP binding is disabled by default. "
+            "Use --allow-remote-http to bind to non-loopback addresses."
+        )
+
+    if not auth_token:
+        raise ValueError(
+            "Remote HTTP MCP binding requires MCP_HTTP_AUTH_TOKEN to be set."
+        )
+
+
+def _is_authorized_http_request(
+    authorization_header: str | None, auth_token: str | None
+) -> bool:
+    if not auth_token:
+        return True
+    if not authorization_header:
+        return False
+    expected = f"Bearer {auth_token}"
+    return authorization_header == expected
+
+
 async def serve_stdio() -> None:
     logger.info(lg.MCP_SERVER_STARTING)
 
@@ -164,14 +208,18 @@ async def serve_stdio() -> None:
 async def serve_http(
     host: str = settings.MCP_HTTP_HOST,
     port: int = settings.MCP_HTTP_PORT,
+    allow_remote: bool = settings.MCP_ALLOW_REMOTE_HTTP,
 ) -> None:
     import contextlib
 
     import uvicorn
     from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
     from starlette.applications import Starlette
+    from starlette.responses import PlainTextResponse
     from starlette.routing import Mount
 
+    auth_token = settings.MCP_HTTP_AUTH_TOKEN
+    _validate_http_host(host, allow_remote, auth_token=auth_token)
     logger.info(lg.MCP_HTTP_SERVER_STARTING.format(host=host, port=port))
 
     server, ingestor = create_server()
@@ -200,6 +248,18 @@ async def serve_http(
         ],
         lifespan=lifespan,
     )
+
+    @starlette_app.middleware("http")
+    async def require_bearer_token(request, call_next):
+        if not _is_authorized_http_request(
+            request.headers.get("authorization"), auth_token
+        ):
+            return PlainTextResponse(
+                "Unauthorized",
+                status_code=401,
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return await call_next(request)
 
     config = uvicorn.Config(starlette_app, host=host, port=port, log_level="info")
     uvicorn_server = uvicorn.Server(config)

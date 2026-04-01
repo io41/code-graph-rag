@@ -276,9 +276,20 @@ class AppConfig(BaseSettings):
 
     QUIET: bool = Field(False, validation_alias="CGR_QUIET")
 
-    MCP_HTTP_HOST: str = "0.0.0.0"
+    MCP_HTTP_HOST: str = "127.0.0.1"
     MCP_HTTP_PORT: int = 8080
     MCP_HTTP_ENDPOINT_PATH: str = "/mcp"
+    MCP_ALLOW_REMOTE_HTTP: bool = False
+    MCP_HTTP_AUTH_TOKEN: str | None = None
+    TRUSTED_GRAMMAR_REPOS: str = ""
+
+    @property
+    def trusted_grammar_repo_allowlist(self) -> frozenset[str]:
+        return frozenset(
+            repo.strip()
+            for repo in self.TRUSTED_GRAMMAR_REPOS.split(",")
+            if repo.strip()
+        )
 
     def _get_default_config(self, role: str) -> ModelConfig:
         role_upper = role.upper()

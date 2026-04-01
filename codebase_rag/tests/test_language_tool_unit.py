@@ -5,11 +5,13 @@ import tempfile
 from pathlib import Path
 from unittest.mock import patch
 
+import click
 import pytest
 
 from codebase_rag.tools.language import (
     LanguageInfo,
     NodeCategories,
+    _validate_grammar_source,
     _categorize_node_types,
     _extract_semantic_categories,
     _find_node_types_path,
@@ -258,6 +260,78 @@ class TestParseTreeSitterJson:
             }
             config_path = Path(tmpdir) / "tree-sitter.json"
             config_path.write_text(encoding="utf-8", data=json.dumps(config))
+
+
+class TestValidateGrammarSource:
+    def test_allows_official_tree_sitter_repo_without_trust_flag(self) -> None:
+        _validate_grammar_source(
+            "https://github.com/tree-sitter/tree-sitter-python",
+            trust_custom_grammar_url=False,
+        )
+
+    def test_requires_explicit_trust_for_custom_repo(self) -> None:
+        with pytest.raises(
+            click.ClickException,
+            match="Custom grammar URLs require --trust-custom-grammar-url",
+        ):
+            _validate_grammar_source(
+                "https://github.com/custom/tree-sitter-mylang",
+                trust_custom_grammar_url=False,
+            )
+
+    def test_allows_custom_repo_with_explicit_trust(self) -> None:
+        _validate_grammar_source(
+            "https://github.com/custom/tree-sitter-mylang",
+            trust_custom_grammar_url=True,
+        )
+
+    def test_allows_allowlisted_custom_repo_without_trust_flag(self) -> None:
+        _validate_grammar_source(
+            "https://github.com/custom/tree-sitter-mylang",
+            trust_custom_grammar_url=False,
+            trusted_repos=frozenset({"custom/tree-sitter-mylang"}),
+        )
+
+    def test_rejects_non_https_urls(self) -> None:
+        with pytest.raises(
+            click.ClickException,
+            match="Only https://github.com/ grammar URLs are supported",
+        ):
+            _validate_grammar_source(
+                "ssh://github.com/custom/tree-sitter-mylang",
+                trust_custom_grammar_url=True,
+            )
+
+    def test_rejects_non_repository_root_urls(self) -> None:
+        with pytest.raises(
+            click.ClickException,
+            match="GitHub repository root",
+        ):
+            _validate_grammar_source(
+                "https://github.com/custom/tree-sitter-mylang/tree/main",
+                trust_custom_grammar_url=True,
+            )
+
+    def test_rejects_query_or_fragment_components(self) -> None:
+        with pytest.raises(
+            click.ClickException,
+            match="without query or fragment",
+        ):
+            _validate_grammar_source(
+                "https://github.com/custom/tree-sitter-mylang?ref=main",
+                trust_custom_grammar_url=True,
+            )
+
+    def test_rejects_non_allowlisted_custom_repo_without_trust_flag(self) -> None:
+        with pytest.raises(
+            click.ClickException,
+            match="Custom grammar URLs require --trust-custom-grammar-url",
+        ):
+            _validate_grammar_source(
+                "https://github.com/custom/tree-sitter-mylang",
+                trust_custom_grammar_url=False,
+                trusted_repos=frozenset({"acme/tree-sitter-other"}),
+            )
 
             with patch("click.echo"):
                 result = _parse_tree_sitter_json(

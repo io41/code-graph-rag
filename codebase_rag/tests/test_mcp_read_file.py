@@ -184,6 +184,18 @@ class TestReadFileEdgeCases:
 
         assert "Error:" in result
 
+    async def test_read_prevents_directory_traversal_with_pagination(
+        self, mcp_registry: MCPToolsRegistry, temp_project_root: Path
+    ) -> None:
+        """Test paginated reads cannot escape the project root."""
+        outside_file = temp_project_root.parent / "outside.txt"
+        outside_file.write_text("secret", encoding="utf-8")
+
+        result = await mcp_registry.read_file("../outside.txt", offset=0, limit=1)
+
+        assert "Error:" in result
+        assert "outside of project root" in result
+
     async def test_read_single_line_file(
         self, mcp_registry: MCPToolsRegistry, temp_project_root: Path
     ) -> None:

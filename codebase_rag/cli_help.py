@@ -79,6 +79,12 @@ HELP_GRAMMAR_URL = (
     "URL to the tree-sitter grammar repository. If not provided, "
     "will use https://github.com/tree-sitter/tree-sitter-<language_name>"
 )
+HELP_TRUST_CUSTOM_GRAMMAR_URL = (
+    "Acknowledge that a non-official grammar URL is trusted and may execute build code"
+)
+HELP_TRUSTED_GRAMMAR_REPOS = (
+    "Comma-separated owner/repo allowlist for trusted custom grammar repositories"
+)
 HELP_KEEP_SUBMODULE = "Keep the git submodule (default: remove it)"
 
 HELP_PROJECT_NAME = (
@@ -100,10 +106,13 @@ HELP_ASK_AGENT = (
 
 HELP_MCP_TRANSPORT = "Transport mode: 'stdio' (default) or 'http'"
 HELP_MCP_HTTP_HOST = (
-    "Host to bind the HTTP server — only used when --transport http (default: 0.0.0.0)"
+    "Host to bind the HTTP server — only used when --transport http (default: 127.0.0.1)"
 )
 HELP_MCP_HTTP_PORT = (
     "Port to bind the HTTP server — only used when --transport http (default: 8080)"
+)
+HELP_MCP_ALLOW_REMOTE_HTTP = (
+    "Allow binding the HTTP MCP server to non-loopback addresses (requires MCP_HTTP_AUTH_TOKEN)"
 )
 
 CLI_COMMANDS: dict[CLICommandName, str] = {

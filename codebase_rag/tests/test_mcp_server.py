@@ -5,7 +5,11 @@ from unittest.mock import patch
 
 import pytest
 
-from codebase_rag.mcp.server import get_project_root
+from codebase_rag.mcp.server import (
+    _is_authorized_http_request,
+    _validate_http_host,
+    get_project_root,
+)
 
 
 class TestGetProjectRoot:
@@ -173,3 +177,44 @@ class TestGetProjectRoot:
         assert result == actual_cwd.resolve()
         assert result.exists()
         assert result.is_dir()
+
+
+class TestValidateHttpHost:
+    def test_allows_loopback_hosts_by_default(self) -> None:
+        for host in ("127.0.0.1", "localhost", "::1"):
+            _validate_http_host(host, allow_remote=False)
+
+    def test_rejects_non_local_bind_without_explicit_opt_in(self) -> None:
+        with pytest.raises(ValueError, match="Remote HTTP MCP binding is disabled"):
+            _validate_http_host("0.0.0.0", allow_remote=False)
+
+        with pytest.raises(ValueError, match="Remote HTTP MCP binding is disabled"):
+            _validate_http_host("192.168.1.10", allow_remote=False)
+
+    def test_allows_non_local_bind_with_explicit_opt_in(self) -> None:
+        for host in ("0.0.0.0", "192.168.1.10", "example.internal"):
+            _validate_http_host(host, allow_remote=True, auth_token="secret")
+
+    def test_requires_auth_token_for_remote_http(self) -> None:
+        with pytest.raises(
+            ValueError, match="requires MCP_HTTP_AUTH_TOKEN to be set"
+        ):
+            _validate_http_host("0.0.0.0", allow_remote=True, auth_token=None)
+
+
+class TestAuthorizeHttpRequest:
+    def test_local_mode_allows_requests_without_token(self) -> None:
+        assert _is_authorized_http_request(None, auth_token=None) is True
+
+    def test_rejects_missing_token_when_auth_enabled(self) -> None:
+        assert _is_authorized_http_request(None, auth_token="secret") is False
+
+    def test_rejects_wrong_bearer_token(self) -> None:
+        assert (
+            _is_authorized_http_request("Bearer wrong", auth_token="secret") is False
+        )
+
+    def test_accepts_matching_bearer_token(self) -> None:
+        assert (
+            _is_authorized_http_request("Bearer secret", auth_token="secret") is True
+        )

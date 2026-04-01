@@ -30,6 +30,18 @@ claude mcp add --transport stdio code-graph-rag \
   -- uv run --directory /path/to/code-graph-rag code-graph-rag mcp-server
 ```
 
+## HTTP Transport Security
+
+- Default HTTP bind: `127.0.0.1:8080`
+- Non-loopback binding requires:
+  - `--allow-remote-http` or `MCP_ALLOW_REMOTE_HTTP=true`
+  - `MCP_HTTP_AUTH_TOKEN` set
+- If `MCP_HTTP_AUTH_TOKEN` is configured, clients must send:
+
+```text
+Authorization: Bearer <your-token>
+```
+
 ### Using Current Directory
 
 ```bash

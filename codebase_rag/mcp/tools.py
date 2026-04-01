@@ -548,13 +548,28 @@ class MCPToolsRegistry:
             logger.error(lg.MCP_ERROR_REPLACE.format(error=e))
             return te.ERROR_WRAPPER.format(message=e)
 
+    def _resolve_project_file_path(self, file_path: str) -> Path:
+        project_root = Path(self.project_root).resolve()
+        resolved_path = (project_root / file_path).resolve()
+        resolved_path.relative_to(project_root)
+        return resolved_path
+
     async def read_file(
         self, file_path: str, offset: int | None = None, limit: int | None = None
     ) -> str:
         logger.info(lg.MCP_READ_FILE.format(path=file_path, offset=offset, limit=limit))
         try:
             if offset is not None or limit is not None:
-                full_path = Path(self.project_root) / file_path
+                full_path = self._resolve_project_file_path(file_path)
+
+                if not full_path.is_file():
+                    return te.ERROR_WRAPPER.format(message=te.FILE_NOT_FOUND)
+
+                if full_path.suffix.lower() in cs.BINARY_EXTENSIONS:
+                    return te.ERROR_WRAPPER.format(
+                        message=te.BINARY_FILE.format(path=full_path)
+                    )
+
                 start = offset if offset is not None else 0
 
                 with open(full_path, encoding=cs.ENCODING_UTF8) as f:
@@ -582,6 +597,11 @@ class MCPToolsRegistry:
                 result = await self._file_reader_tool.function(file_path=file_path)
                 return str(result)
 
+        except ValueError:
+            logger.error(lg.MCP_ERROR_READ.format(error=lg.FILE_OUTSIDE_ROOT))
+            return te.ERROR_WRAPPER.format(
+                message=lg.FILE_OUTSIDE_ROOT.format(action=cs.FileAction.READ)
+            )
         except Exception as e:
             logger.error(lg.MCP_ERROR_READ.format(error=e))
             return te.ERROR_WRAPPER.format(message=e)
